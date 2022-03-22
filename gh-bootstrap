@@ -1,0 +1,8 @@
+#!/bin/sh
+
+if ! command -v fish 2>&1 >/dev/null; then
+  echo "Fish shell not found."
+  exit 1
+fi
+
+exec fish $(dirname $0)/bootstrap.fish $@
