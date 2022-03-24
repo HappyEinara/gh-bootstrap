@@ -163,7 +163,7 @@ if git checkout -b develop
     if string match --regex '^Bump version' $_commit_message
       git add .
       git commit -m "$_commit_message"
-      poetry install .
+      poetry install
     else
       echo "Error bumping version. Output was: $_commit_message"
   end
