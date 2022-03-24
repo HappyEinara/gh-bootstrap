@@ -97,12 +97,6 @@ end
 echo "Creating virtualenv $_project"
 vf new $_project; and vf connect
 
-# Set up develop branch
-git checkout $_default_branch
-if git checkout -b develop
-  echo "Created develop branch."
-  git push --set-upstream $_remote develop
-end
 
 echo "Creating or updating template branch."
 echo "Template repo: $_template_repo"
@@ -146,5 +140,38 @@ echo "Running cruft with: $_cruft"
 cd ..
 $_cruft
 
-echo "All done. Review generated template, commit and merge to main, rebasing develop."
+cd $_project
+git add .  \
+  && git commit -m "Initial template generation"  \
+  && git push  \
+  && git checkout $_default_branch  \
+  && git merge --ff-only template  \
+  && git push
+
+if ! make check-version
+  echo "Tagging initial release."
+  make tag-release && git push --tags
+end
+
+# Set up develop branch
+git checkout $_default_branch
+if git checkout -b develop
+  echo "Created develop branch."
+  if ! make check-version
+    echo "Bumping version on develop."
+    set _commit_message (make bump-version | tail -n1)
+    if string match --regex '^Bump version' $_commit_message
+      git add .
+      git commit -m "$_commit_message"
+      poetry install .
+    else
+      echo "Error bumping version. Output was: $_commit_message"
+  end
+end
+
+  git push --set-upstream $_remote develop
+else
+  echo "Develop branch exists. Rebase on or merge from main."
+end
+
 
